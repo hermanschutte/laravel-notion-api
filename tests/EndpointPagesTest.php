@@ -46,6 +46,7 @@ class EndpointPagesTest extends NotionApiTest
 
         $this->expectException(NotionException::class);
         $this->expectExceptionMessage('Bad Request');
+        $this->expectExceptionCode(400);
 
         Notion::pages()->find('afd5f6fb-1cbd-41d1-a108-a22ae0d9bac8');
     }
@@ -72,6 +73,9 @@ class EndpointPagesTest extends NotionApiTest
         $this->assertCount(9, $pageResult->getRawProperties());
         $this->assertCount(9, $pageResult->getProperties());
         $this->assertCount(9, $pageResult->getPropertyKeys());
+        $this->assertSame('database_id', $pageResult->getParentType());
+        $this->assertSame('f2939732-f694-4ce2-b613-f28db6ded673', $pageResult->getParentId());
+        $this->assertTrue($pageResult->isArchived());
 
         // check date and datetime properties
         $this->assertTrue($pageResult->getProperty('DateWithTime')->hasTime());
@@ -95,6 +99,7 @@ class EndpointPagesTest extends NotionApiTest
 
         $this->expectException(NotionException::class);
         $this->expectExceptionMessage('Not found');
+        $this->expectExceptionCode(404);
 
         Notion::pages()->find('b55c9c91-384d-452b-81db-d1ef79372b79');
     }
@@ -102,7 +107,6 @@ class EndpointPagesTest extends NotionApiTest
     /** @test */
     public function it_assembles_properties_for_a_new_page()
     {
-
         // test values
         $pageId = '0349b883a1c64539b435289ea62b6eab';
         $pageTitle = 'I was updated from Tinkerwell';
@@ -249,6 +253,7 @@ class EndpointPagesTest extends NotionApiTest
         $this->assertInstanceOf(Email::class, $mailProp);
         $this->assertEquals($emailValue, $mailProp->getContent());
         $this->assertEquals($emailValue, $mailProp->getEmail());
+        $this->assertEquals($emailValue, $mailProp->asText());
         $mailContent = $mailProp->getRawContent();
         $this->assertArrayHasKey('email', $mailContent);
         $this->assertEquals($mailContent['email'], $emailValue);
@@ -275,6 +280,7 @@ class EndpointPagesTest extends NotionApiTest
         $numberProp = $page->getProperty($numberKey);
         $this->assertEquals($numberValue, $numberProp->getContent());
         $this->assertEquals($numberValue, $numberProp->getNumber());
+        $this->assertEquals($numberValue, $numberProp->asText());
         $numberContent = $numberProp->getRawContent();
         $this->assertArrayHasKey('number', $numberContent);
         $this->assertEquals($numberContent['number'], $numberValue);
@@ -302,6 +308,7 @@ class EndpointPagesTest extends NotionApiTest
         $phoneProp = $page->getProperty($phoneKey);
         $this->assertEquals($phoneValue, $phoneProp->getPhoneNumber());
         $this->assertEquals($phoneProp->getContent(), $phoneProp->getPhoneNumber());
+        $this->assertEquals($phoneProp->getContent(), $phoneProp->asText());
         $phoneContent = $phoneProp->getRawContent();
         $this->assertArrayHasKey('phone_number', $phoneContent);
         $this->assertEquals($phoneContent['phone_number'], $phoneValue);
@@ -331,6 +338,7 @@ class EndpointPagesTest extends NotionApiTest
         $textProp = $page->getProperty($textKey);
         $this->assertInstanceOf(RichText::class, $textProp->getContent());
         $this->assertEquals($textValue, $textProp->getContent()->getPlainText());
+        $this->assertEquals($textValue, $textProp->asText());
         $textContent = $textProp->getRawContent();
         $this->assertArrayHasKey('rich_text', $textContent);
         $this->assertCount(1, $textContent['rich_text']);
@@ -345,6 +353,7 @@ class EndpointPagesTest extends NotionApiTest
         $urlProp = $page->getProperty($urlKey);
         $this->assertEquals($urlValue, $urlProp->getUrl());
         $this->assertEquals($urlProp->getContent(), $urlProp->getUrl());
+        $this->assertEquals($urlProp->getContent(), $urlProp->asText());
         $urlContent = $urlProp->getRawContent();
         $this->assertArrayHasKey('url', $urlContent);
         $this->assertEquals($urlValue, $urlContent['url']);

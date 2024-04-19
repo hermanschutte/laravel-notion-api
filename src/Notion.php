@@ -3,10 +3,12 @@
 namespace FiveamCode\LaravelNotionApi;
 
 use FiveamCode\LaravelNotionApi\Endpoints\Block;
+use FiveamCode\LaravelNotionApi\Endpoints\Comments;
 use FiveamCode\LaravelNotionApi\Endpoints\Database;
 use FiveamCode\LaravelNotionApi\Endpoints\Databases;
 use FiveamCode\LaravelNotionApi\Endpoints\Endpoint;
 use FiveamCode\LaravelNotionApi\Endpoints\Pages;
+use FiveamCode\LaravelNotionApi\Endpoints\Resolve;
 use FiveamCode\LaravelNotionApi\Endpoints\Search;
 use FiveamCode\LaravelNotionApi\Endpoints\Users;
 use FiveamCode\LaravelNotionApi\Exceptions\HandlingException;
@@ -185,6 +187,22 @@ class Notion
     }
 
     /**
+     * @return Comments
+     *
+     * @throws Exceptions\LaravelNotionAPIException
+     * @throws HandlingException
+     */
+    public function comments(): Comments
+    {
+        return new Comments($this);
+    }
+
+    public function resolve(): Resolve
+    {
+        return new Resolve($this);
+    }
+
+    /**
      * @return string
      */
     public function getVersion(): string
@@ -227,7 +245,7 @@ class Notion
     }
 
     /**
-     * Due to the inconsistency of the Notion API requiring a endpoint url
+     * Due to the inconsistency of the Notion API requiring an endpoint url
      * with v* as well as a dated version in the request header, this method
      * maps the given version (e.g. v1) to the version date Notion requires
      * in the header (e.g. "2021-05-13").

@@ -3,6 +3,7 @@
 namespace FiveamCode\LaravelNotionApi\Exceptions;
 
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Arr;
 
 /**
  * Class NotionException.
@@ -16,7 +17,17 @@ class NotionException extends LaravelNotionAPIException
      */
     public static function instance(string $message, array $payload = []): NotionException
     {
-        $e = new NotionException($message);
+        $code = 0;
+
+        $responseDataExists = array_key_exists('responseData', $payload);
+
+        if ($responseDataExists) {
+            $responseData = $payload['responseData'];
+
+            $code = array_key_exists('status', $responseData) ? $responseData['status'] : 0;
+        }
+
+        $e = new NotionException($message, $code);
         $e->payload = $payload;
 
         return $e;
@@ -34,11 +45,11 @@ class NotionException extends LaravelNotionAPIException
         $responseBody = json_decode($response->getBody()->getContents(), true);
 
         $errorCode = $errorMessage = '';
-        if (array_key_exists('code', $responseBody)) {
+        if (Arr::exists($responseBody ?? [], 'code')) {
             $errorCode = "({$responseBody['code']})";
         }
 
-        if (array_key_exists('code', $responseBody)) {
+        if (Arr::exists($responseBody ?? [], 'code')) {
             $errorMessage = "({$responseBody['message']})";
         }
 
@@ -46,7 +57,7 @@ class NotionException extends LaravelNotionAPIException
 
         return new NotionException(
             $message,
-            0,
+            $response->status(),
             $response->toException()
         );
     }

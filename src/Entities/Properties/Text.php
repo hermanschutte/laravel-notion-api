@@ -17,7 +17,7 @@ class Text extends Property implements Modifiable
     protected string $plainText = '';
 
     /**
-     * @param $text
+     * @param  $text
      * @return Text
      */
     public static function value($text): Text
@@ -75,6 +75,14 @@ class Text extends Property implements Modifiable
     public function getContent(): RichText
     {
         return $this->getRichText();
+    }
+
+    /**
+     * @return string
+     */
+    public function asText(): string
+    {
+        return $this->getPlainText();
     }
 
     /**

@@ -13,6 +13,7 @@ use FiveamCode\LaravelNotionApi\Entities\Blocks\Image;
 use FiveamCode\LaravelNotionApi\Entities\Blocks\NumberedListItem;
 use FiveamCode\LaravelNotionApi\Entities\Blocks\Paragraph;
 use FiveamCode\LaravelNotionApi\Entities\Blocks\Pdf;
+use FiveamCode\LaravelNotionApi\Entities\Blocks\Quote;
 use FiveamCode\LaravelNotionApi\Entities\Blocks\ToDo;
 use FiveamCode\LaravelNotionApi\Entities\Blocks\Toggle;
 use FiveamCode\LaravelNotionApi\Entities\Blocks\Video;
@@ -45,6 +46,7 @@ class EndpointBlocksTest extends NotionApiTest
 
         $this->expectException(NotionException::class);
         $this->expectExceptionMessage('Bad Request');
+        $this->expectExceptionCode(400);
 
         Notion::block('b55c9c91-384d-452b-81db-d1ef79372b76')->children();
     }
@@ -99,7 +101,7 @@ class EndpointBlocksTest extends NotionApiTest
         $blockChildrenCollection = $blockChildren->asCollection();
         $this->assertContainsOnly(Block::class, $blockChildrenCollection);
         $this->assertIsIterable($blockChildrenCollection);
-        $this->assertCount(13, $blockChildrenCollection);
+        $this->assertCount(14, $blockChildrenCollection);
 
         // check paragraph
         $blockChild = $blockChildrenCollection[0];
@@ -200,6 +202,13 @@ class EndpointBlocksTest extends NotionApiTest
         $this->assertEquals('TestCaption', $blockChild->getCaption()->getPlainText());
         $this->assertEquals('external', $blockChild->getHostingType());
         $this->assertEquals('https://notion.so/testpdf.pdf', $blockChild->getUrl());
+
+        // check quote
+        $blockChild = $blockChildrenCollection[13];
+        $this->assertInstanceOf(Quote::class, $blockChild);
+        $this->assertEquals('quote', $blockChild->getType());
+        $this->assertFalse($blockChild->hasChildren());
+        $this->assertEquals('quote_block', $blockChild->getContent()->getPlainText());
     }
 
     /** @test */
@@ -216,6 +225,7 @@ class EndpointBlocksTest extends NotionApiTest
 
         $this->expectException(NotionException::class);
         $this->expectExceptionMessage('Not found');
+        $this->expectExceptionCode(404);
 
         Notion::block('b55c9c91-384d-452b-81db-d1ef79372b11')->children();
     }
@@ -249,6 +259,7 @@ class EndpointBlocksTest extends NotionApiTest
         $file = File::create('https://images.unsplash.com/photo-1593642533144-3d62aa4783ec?ixlib=rb-1.2.1&q=85&fm=jpg&crop=entropy&cs=srgb', 'Testcaption');
         $video = Video::create('https://www.w3schools.com/html/mov_bbb.mp4', 'TestCaption');
         $pdf = Pdf::create('https://notion.so/testpdf.pdf', 'TestCaption');
+        $quote = Quote::create('New TextBlock');
 
         $parentBlock = Notion::block('1d719dd1-563b-4387-b74f-20da92b827fb')->append($paragraph);
         $this->assertInstanceOf(Block::class, $parentBlock);
@@ -289,7 +300,10 @@ class EndpointBlocksTest extends NotionApiTest
         $parentBlock = Notion::block('1d719dd1-563b-4387-b74f-20da92b827fb')->append($pdf);
         $this->assertInstanceOf(Block::class, $parentBlock);
 
-        $parentBlock = Notion::block('1d719dd1-563b-4387-b74f-20da92b827fb')->append([$paragraph, $bulletedListItem, $headingOne, $headingTwo, $headingThree, $numberedListItem, $toDo, $toggle, $embed, $image, $video, $pdf]);
+        $parentBlock = Notion::block('1d719dd1-563b-4387-b74f-20da92b827fb')->append($quote);
+        $this->assertInstanceOf(Block::class, $parentBlock);
+
+        $parentBlock = Notion::block('1d719dd1-563b-4387-b74f-20da92b827fb')->append([$paragraph, $bulletedListItem, $headingOne, $headingTwo, $headingThree, $numberedListItem, $toDo, $toggle, $embed, $image, $video, $pdf, $quote]);
         $this->assertInstanceOf(Block::class, $parentBlock);
     }
 
@@ -307,19 +321,21 @@ class EndpointBlocksTest extends NotionApiTest
             [Paragraph::class],
             [ToDo::class],
             [Toggle::class],
+            [Quote::class],
         ];
     }
 
     /**
      * @test
+     *
      * @dataProvider classProvider
      *
-     * @param $entityClass
+     * @param  $entityClass
      */
     public function it_throws_an_handling_exception_for_wrong_type($entityClass)
     {
         $this->expectException(HandlingException::class);
-        $paragraph = $entityClass::create(new \stdClass());
+        $entityClass::create(new \stdClass());
     }
 
     /** @test */
@@ -338,5 +354,13 @@ class EndpointBlocksTest extends NotionApiTest
 
         $this->assertInstanceOf(Block::class, $block);
         $this->assertInstanceOf(Paragraph::class, $block);
+        $this->assertEquals('a6f8ebe8-d5df-4ffa-b543-bcd54d1c3bad', $block->getId());
+        $this->assertEquals('paragraph', $block->getType());
+        $this->assertEquals('This is a paragraph test', $block->getContent()->getPlainText());
+        $this->assertEquals('block', $block->getObjectType());
+
+        $this->assertEquals('page_id', $block->getParentType());
+        $this->assertEquals('f2939732-f694-4ce2-b613-f28db6ded673', $block->getParentId());
+        $this->assertTrue($block->isArchived());
     }
 }

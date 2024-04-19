@@ -17,7 +17,7 @@ class Title extends Property implements Modifiable
     protected string $plainText = '';
 
     /**
-     * @param $text
+     * @param  $text
      * @return Title
      */
     public static function value($text): Title
@@ -74,6 +74,14 @@ class Title extends Property implements Modifiable
     public function getContent(): RichText
     {
         return $this->getRichText();
+    }
+
+    /**
+     * @return string
+     */
+    public function asText(): string
+    {
+        return $this->getPlainText();
     }
 
     /**

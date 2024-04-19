@@ -17,6 +17,9 @@ use FiveamCode\LaravelNotionApi\Entities\Properties\Text;
 use FiveamCode\LaravelNotionApi\Entities\Properties\Title;
 use FiveamCode\LaravelNotionApi\Entities\Properties\Url;
 use FiveamCode\LaravelNotionApi\Exceptions\HandlingException;
+use FiveamCode\LaravelNotionApi\Traits\HasArchive;
+use FiveamCode\LaravelNotionApi\Traits\HasParent;
+use FiveamCode\LaravelNotionApi\Traits\HasTimestamps;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
@@ -25,6 +28,8 @@ use Illuminate\Support\Collection;
  */
 class Page extends Entity
 {
+    use HasTimestamps, HasArchive, HasParent;
+
     /**
      * @var string
      */
@@ -56,11 +61,6 @@ class Page extends Entity
     private string $coverType = '';
 
     /**
-     * @var string
-     */
-    protected string $objectType = '';
-
-    /**
      * @var array
      */
     protected array $rawProperties = [];
@@ -79,16 +79,6 @@ class Page extends Entity
      * @var Collection
      */
     protected Collection $properties;
-
-    /**
-     * @var DateTime
-     */
-    protected DateTime $createdTime;
-
-    /**
-     * @var DateTime
-     */
-    protected DateTime $lastEditedTime;
 
     /**
      * Page constructor.
@@ -121,22 +111,12 @@ class Page extends Entity
 
     private function fillFromRaw(): void
     {
-        $this->fillId();
-        $this->fillObjectType();
+        parent::fillEssentials();
         $this->fillProperties();
-        $this->fillTitle(); // This has to be called after fillProperties(), since title is provided by properties
+        $this->fillTitle(); // This has to be called after fillProperties(), since title is provided by properties (hence this is not a trait!)
         $this->fillPageUrl();
         $this->fillIcon();
         $this->fillCover();
-        $this->fillCreatedTime();
-        $this->fillLastEditedTime();
-    }
-
-    private function fillObjectType(): void
-    {
-        if (Arr::exists($this->responseData, 'object')) {
-            $this->objectType = $this->responseData['object'];
-        }
     }
 
     /**
@@ -206,8 +186,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $property
+     * @param  $propertyTitle
+     * @param  $property
      * @return Page
      */
     public function set(string $propertyKey, Property $property): Page
@@ -224,8 +204,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $number
+     * @param  $propertyTitle
+     * @param  $number
      * @return Page
      */
     public function setNumber(string $propertyTitle, float $number): Page
@@ -236,8 +216,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $text
+     * @param  $propertyTitle
+     * @param  $text
      * @return Page
      */
     public function setTitle(string $propertyTitle, string $text): Page
@@ -248,8 +228,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $text
+     * @param  $propertyTitle
+     * @param  $text
      * @return Page
      */
     public function setText(string $propertyTitle, string $text): Page
@@ -260,8 +240,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $name
+     * @param  $propertyTitle
+     * @param  $name
      * @return Page
      */
     public function setSelect(string $propertyTitle, string $name): Page
@@ -272,8 +252,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $url
+     * @param  $propertyTitle
+     * @param  $url
      * @return Page
      */
     public function setUrl(string $propertyTitle, string $url): Page
@@ -284,8 +264,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $phoneNumber
+     * @param  $propertyTitle
+     * @param  $phoneNumber
      * @return Page
      */
     public function setPhoneNumber(string $propertyTitle, string $phoneNumber): Page
@@ -296,8 +276,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $email
+     * @param  $propertyTitle
+     * @param  $email
      * @return Page
      */
     public function setEmail(string $propertyTitle, string $email): Page
@@ -308,8 +288,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $names
+     * @param  $propertyTitle
+     * @param  $names
      * @return Page
      */
     public function setMultiSelect(string $propertyTitle, array $names): Page
@@ -320,8 +300,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $checked
+     * @param  $propertyTitle
+     * @param  $checked
      * @return Page
      */
     public function setCheckbox(string $propertyTitle, bool $checked): Page
@@ -332,9 +312,9 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $start
-     * @param $end
+     * @param  $propertyTitle
+     * @param  $start
+     * @param  $end
      * @return Page
      */
     public function setDate(string $propertyTitle, DateTime $start, ?DateTime $end = null): Page
@@ -345,9 +325,9 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $start
-     * @param $end
+     * @param  $propertyTitle
+     * @param  $start
+     * @param  $end
      * @return Page
      */
     public function setDateTime(string $propertyTitle, DateTime $start, ?DateTime $end = null): Page
@@ -358,8 +338,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $relationIds
+     * @param  $propertyTitle
+     * @param  $relationIds
      * @return Page
      */
     public function setRelation(string $propertyTitle, array $relationIds): Page
@@ -370,8 +350,8 @@ class Page extends Entity
     }
 
     /**
-     * @param $propertyTitle
-     * @param $userIds
+     * @param  $propertyTitle
+     * @param  $userIds
      * @return Page
      */
     public function setPeople(string $propertyTitle, array $userIds): Page
@@ -451,14 +431,6 @@ class Page extends Entity
     }
 
     /**
-     * @return string
-     */
-    public function getObjectType(): string
-    {
-        return $this->objectType;
-    }
-
-    /**
      * @return array
      */
     public function getRawProperties(): array
@@ -472,21 +444,5 @@ class Page extends Entity
     public function getPropertyKeys(): array
     {
         return $this->propertyKeys;
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getCreatedTime(): DateTime
-    {
-        return $this->createdTime;
-    }
-
-    /**
-     * @return DateTime
-     */
-    public function getLastEditedTime(): DateTime
-    {
-        return $this->lastEditedTime;
     }
 }
